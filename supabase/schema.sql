@@ -14,6 +14,8 @@ create table entries (
   start_at timestamptz not null,
   end_at timestamptz,
   note text not null default '',
+  pause_seconds integer not null default 0 check (pause_seconds >= 0),
+  paused_at timestamptz,
   lat double precision,
   lng double precision,
   created_at timestamptz not null default now(),

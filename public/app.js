@@ -1,4 +1,4 @@
-import { entryHours, fmtHours, dateKey, timeStr, pad } from './time.js';
+import { entryHours, workSeconds, fmtHours, dateKey, timeStr, pad } from './time.js';
 import { createStore } from './store.js';
 
 const $ = (s) => document.querySelector(s);
@@ -70,10 +70,13 @@ function renderTrack() {
   $('#geo').checked = localStorage.getItem(GEO) === '1';
   if (!running) return fillProjectSelect($('#start-project'), localStorage.getItem(LAST_PROJECT));
   $('#run-project').textContent = projectName(running.project_id);
-  $('#run-since').textContent = 'seit ' + timeStr(new Date(running.start_at));
+  $('#run-since').textContent = running.paused_at ? 'Pause seit ' + timeStr(new Date(running.paused_at))
+    : 'seit ' + timeStr(new Date(running.start_at));
+  $('#pause').textContent = running.paused_at ? '▶ Weiter' : '❚❚ Pause';
+  $('#running').classList.toggle('paused', !!running.paused_at);
   if (document.activeElement !== $('#run-note')) $('#run-note').value = running.note || '';
   const tick = () => {
-    const s = Math.max(0, Math.floor((Date.now() - new Date(running.start_at)) / 1000));
+    const s = workSeconds(running);
     $('#run-clock').textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
   };
   tick();
@@ -113,8 +116,20 @@ $('#start').onclick = () => guard(async () => {
   }
 });
 
+// Laufende Pause in pause_seconds übernehmen, damit Weiter/Stopp sie mitzählt.
+const endPause = (now) => (running.paused_at
+  ? { paused_at: null, pause_seconds: (running.pause_seconds || 0) + Math.round((now - new Date(running.paused_at)) / 1000) }
+  : {});
+
+$('#pause').onclick = () => guard(async () => {
+  const now = new Date();
+  await store.update('entries', running.id, running.paused_at ? endPause(now) : { paused_at: now.toISOString() });
+  await refresh();
+});
+
 $('#stop').onclick = () => guard(async () => {
-  await store.update('entries', running.id, { end_at: new Date().toISOString(), note: $('#run-note').value.trim() });
+  const now = new Date();
+  await store.update('entries', running.id, { ...endPause(now), end_at: now.toISOString(), note: $('#run-note').value.trim() });
   await refresh();
 });
 
@@ -129,7 +144,7 @@ function entryRow(e) {
     <span class="time">${timeStr(s)}–${e.end_at ? timeStr(new Date(e.end_at)) : 'läuft'}</span>
     <span class="proj">${esc(projectName(e.project_id))}</span>
     <span class="hours">${e.end_at ? fmtHours(entryHours(e)) : ''}${e.lat != null ? ' 📍' : ''}</span>
-    ${e.note ? `<span class="note">${esc(e.note)}</span>` : ''}
+    ${e.note || e.pause_seconds ? `<span class="note">${[e.pause_seconds ? `Pause ${Math.round(e.pause_seconds / 60)} min` : '', esc(e.note)].filter(Boolean).join(' · ')}</span>` : ''}
   </button></li>`;
 }
 
@@ -159,6 +174,37 @@ async function renderMonth() {
 $('#prev-month').onclick = () => { month = new Date(month.getFullYear(), month.getMonth() - 1, 1); guard(renderMonth); };
 $('#next-month').onclick = () => { month = new Date(month.getFullYear(), month.getMonth() + 1, 1); guard(renderMonth); };
 
+// ---------- Excel-Export ----------
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const el = Object.assign(document.createElement('script'), { src, onload: res });
+    el.onerror = () => rej(new Error('Excel-Export konnte nicht geladen werden.'));
+    document.head.append(el);
+  });
+}
+
+$('#export').onclick = () => guard(async () => {
+  if (!window.XLSX) await loadScript('vendor/xlsx.mini.min.js'); // SheetJS 0.18.5, nur beim Export geladen
+  const to = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+  const list = (await store.entries(month.toISOString(), to.toISOString())).filter((e) => e.end_at);
+  const times = [['Datum', 'Von', 'Bis', 'Pause (min)', 'Projekt', 'Aufgabe', 'Stunden'],
+    ...list.map((e) => {
+      const s = new Date(e.start_at);
+      return [s.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }), timeStr(s), timeStr(new Date(e.end_at)),
+        Math.round((e.pause_seconds || 0) / 60), projectName(e.project_id), e.note || '', entryHours(e)];
+    }),
+    [], ['Gesamt', '', '', '', '', '', sum(list)]];
+  const perProject = [['Projekt', 'Stunden'],
+    ...[...group(list, (e) => projectName(e.project_id))].map(([name, es]) => [name, sum(es)]),
+    ['Gesamt', sum(list)]];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(times);
+  ws['!cols'] = [11, 6, 6, 11, 22, 45, 9].map((wch) => ({ wch }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Zeiten');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(perProject), 'Projekte');
+  XLSX.writeFile(wb, `Zeiterfassung_${month.getFullYear()}-${pad(month.getMonth() + 1)}.xlsx`);
+});
+
 // ---------- Eintrag bearbeiten / nachtragen ----------
 const dlg = $('#entry-dialog');
 const form = dlg.querySelector('form');
@@ -172,6 +218,7 @@ function openEntry(e) {
   form.from.value = e ? timeStr(s) : '';
   form.to.value = e?.end_at ? timeStr(new Date(e.end_at)) : '';
   form.to.required = !(e && !e.end_at); // nur eine laufende Zeit darf ohne Ende bleiben
+  form.pause.value = e?.pause_seconds ? Math.round(e.pause_seconds / 60) : '';
   form.note.value = e?.note || '';
   $('#entry-geo').innerHTML = e?.lat != null
     ? `<a href="https://www.google.com/maps?q=${e.lat},${e.lng}" target="_blank" rel="noopener">📍 Standort beim Start anzeigen</a>` : '';
@@ -189,6 +236,7 @@ form.onsubmit = (ev) => {
       project_id: form.project.value || null,
       start_at: start.toISOString(),
       end_at: end ? end.toISOString() : null,
+      pause_seconds: (Number(form.pause.value) || 0) * 60,
       note: form.note.value.trim(),
     };
     if (editing) await store.update('entries', editing.id, row);
