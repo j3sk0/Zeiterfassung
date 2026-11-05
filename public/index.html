@@ -41,7 +41,10 @@
         <div id="run-clock" class="clock">00:00:00</div>
         <p class="center"><strong id="run-project"></strong> · <span id="run-since"></span></p>
         <label>Aufgabe / Notiz <textarea id="run-note" rows="2"></textarea></label>
-        <button id="stop" class="big stop">■ Stoppen</button>
+        <div class="row">
+          <button id="pause" class="big pause">❚❚ Pause</button>
+          <button id="stop" class="big stop">■ Stoppen</button>
+        </div>
       </div>
       <label class="check"><input type="checkbox" id="geo"> Standort beim Start speichern</label>
 
@@ -60,6 +63,7 @@
         <div class="row total"><span>Gesamt</span><strong id="month-total"></strong></div>
         <ul id="month-projects" class="sums"></ul>
       </div>
+      <button id="export" class="secondary">⬇ Monat als Excel exportieren</button>
       <div id="month-days"></div>
       <button class="secondary add-entry">+ Zeit nachtragen</button>
     </section>
@@ -88,6 +92,7 @@
         <label>Von <input name="from" type="time" required></label>
         <label>Bis <input name="to" type="time"></label>
       </div>
+      <label>Pause (Minuten) <input name="pause" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label>
       <label>Aufgabe / Notiz <textarea name="note" rows="3"></textarea></label>
       <p id="entry-geo"></p>
       <button class="primary">Speichern</button>

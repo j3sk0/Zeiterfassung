@@ -2,10 +2,11 @@
 
 Einfache Zeiterfassung fürs Handy (PWA, lässt sich auf den Homescreen legen).
 
-- **▶ Jetzt starten / ■ Stoppen** mit Projekt und Notiz (was du gemacht hast)
-- **Zeit nachtragen** mit Datum, von–bis; jeder Eintrag lässt sich antippen und bearbeiten oder löschen
-- **15-Minuten-Takt:** jede angefangene Viertelstunde zählt, pro Eintrag gerundet (1:10 h → 1,25 h, 1:00 h → 1,00 h)
+- **▶ Jetzt starten / ❚❚ Pause / ■ Stoppen** mit Projekt und Notiz (was du gemacht hast); Pausen werden abgezogen
+- **Zeit nachtragen** mit Datum, von–bis und Pause in Minuten; jeder Eintrag lässt sich antippen und bearbeiten oder löschen
+- **15-Minuten-Takt:** jede angefangene Viertelstunde zählt, pro Eintrag nach Abzug der Pause gerundet (1:10 h → 1,25 h, 1:00 h → 1,00 h)
 - **Übersicht** pro Monat: Gesamtstunden, Stunden je Projekt, Einträge je Tag mit Tagessumme
+- **Excel-Export** (.xlsx) des angezeigten Monats: Blatt „Zeiten“ und Blatt „Projekte“ mit Summen
 - **Projekte** anlegen, umbenennen, archivieren
 - **Standort** optional beim Start speichern (📍, Link zu Google Maps)
 

@@ -30,6 +30,9 @@ button { cursor: pointer; border: 0; border-radius: 10px; padding: 12px 16px; ba
 .big { font-size: 1.3rem; font-weight: 600; padding: 20px; color: #fff; }
 .start { background: var(--go); }
 .stop { background: var(--stop); }
+.pause { background: #9a6700; }
+.big + .big, .row .big { flex: 1; }
+.paused .clock { opacity: .5; }
 .clock { font-size: 3rem; font-variant-numeric: tabular-nums; text-align: center; font-weight: 600; }
 .center { text-align: center; margin: 0; }
 .check { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
