@@ -29,7 +29,7 @@ function localStore() {
 }
 
 async function supabaseStore() {
-  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm');
+  const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.75.0/+esm');
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const ok = ({ data, error }) => { if (error) throw error; return data; };
   return {
