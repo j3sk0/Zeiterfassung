@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Zeiterfassung</title>
+  <meta name="theme-color" content="#1f6feb">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Zeiterfassung</h1>
+    <button id="logout" class="link" hidden>Abmelden</button>
+  </header>
+
+  <section id="login" hidden>
+    <form id="login-form" class="card">
+      <h2>Anmelden</h2>
+      <label>E-Mail <input name="email" type="email" autocomplete="email" required></label>
+      <label>Passwort <input name="password" type="password" autocomplete="current-password" minlength="6" required></label>
+      <button class="primary" value="login">Anmelden</button>
+      <button class="secondary" value="signup">Konto anlegen</button>
+    </form>
+  </section>
+
+  <main id="app" hidden>
+    <p id="local-hint" class="hint" hidden>Daten werden nur in diesem Browser gespeichert. Für Sync zwischen Geräten siehe README.</p>
+
+    <section id="view-track" class="view">
+      <div id="idle" class="card">
+        <label>Projekt <select id="start-project"></select></label>
+        <label>Aufgabe / Notiz <input id="start-note" placeholder="Was machst du?" autocomplete="off"></label>
+        <button id="start" class="big start">▶ Jetzt starten</button>
+      </div>
+      <div id="running" class="card" hidden>
+        <div id="run-clock" class="clock">00:00:00</div>
+        <p class="center"><strong id="run-project"></strong> · <span id="run-since"></span></p>
+        <label>Aufgabe / Notiz <textarea id="run-note" rows="2"></textarea></label>
+        <button id="stop" class="big stop">■ Stoppen</button>
+      </div>
+      <label class="check"><input type="checkbox" id="geo"> Standort beim Start speichern</label>
+
+      <h2 class="row"><span>Heute</span><span id="today-total"></span></h2>
+      <ul id="today" class="entries"></ul>
+      <button class="secondary add-entry">+ Zeit nachtragen</button>
+    </section>
+
+    <section id="view-list" class="view" hidden>
+      <div class="row month-nav">
+        <button id="prev-month" aria-label="Vormonat">‹</button>
+        <h2 id="month-label"></h2>
+        <button id="next-month" aria-label="Nächster Monat">›</button>
+      </div>
+      <div class="card">
+        <div class="row total"><span>Gesamt</span><strong id="month-total"></strong></div>
+        <ul id="month-projects" class="sums"></ul>
+      </div>
+      <div id="month-days"></div>
+      <button class="secondary add-entry">+ Zeit nachtragen</button>
+    </section>
+
+    <section id="view-projects" class="view" hidden>
+      <form id="project-form" class="row">
+        <input name="name" placeholder="Neues Projekt" required autocomplete="off">
+        <button class="primary">Anlegen</button>
+      </form>
+      <ul id="project-list" class="projects"></ul>
+    </section>
+
+    <nav>
+      <button data-view="track" class="active">⏱<span>Erfassen</span></button>
+      <button data-view="list">📅<span>Übersicht</span></button>
+      <button data-view="projects">📁<span>Projekte</span></button>
+    </nav>
+  </main>
+
+  <dialog id="entry-dialog">
+    <form>
+      <h2 id="entry-title"></h2>
+      <label>Projekt <select name="project"></select></label>
+      <label>Datum <input name="date" type="date" required></label>
+      <div class="row">
+        <label>Von <input name="from" type="time" required></label>
+        <label>Bis <input name="to" type="time"></label>
+      </div>
+      <label>Aufgabe / Notiz <textarea name="note" rows="3"></textarea></label>
+      <p id="entry-geo"></p>
+      <button class="primary">Speichern</button>
+      <button type="button" id="entry-delete" class="danger">Löschen</button>
+      <button type="button" id="entry-cancel" class="secondary">Abbrechen</button>
+    </form>
+  </dialog>
+</body>
+</html>

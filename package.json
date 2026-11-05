@@ -1,0 +1,9 @@
+{
+  "name": "zeiterfassung",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "start": "npx --yes serve public"
+  }
+}
